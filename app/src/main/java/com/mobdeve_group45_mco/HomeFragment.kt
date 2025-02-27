@@ -52,6 +52,9 @@ class HomeFragment : Fragment() {
 
     private var currentForecast: Forecast? = null
 
+    //initialize the new PostManager
+    private var postManager = PostManager()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -92,23 +95,36 @@ class HomeFragment : Fragment() {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun fetchPosts(forecast: Forecast) {
-        db.collection("posts")
-            .get()
-            .addOnSuccessListener { documents ->
+        //old post fetching logic
+        // db.collection("posts")
+        //     .get()
+        //     .addOnSuccessListener { documents ->
+        //         postList.clear()
+        //         for (document in documents) {
+        //             if (document.getString("city") == forecast.location.name &&
+        //                 document.getString("countryCode") == forecast.location.country_code
+        //             ) {
+        //                 val post = document.toObject(Post::class.java)
+        //                 postList.add(post)
+        //             }
+        //         }
+        //         viewBinding.fragmentHomeRvPosts.adapter?.notifyDataSetChanged()
+        //     }
+        //     .addOnFailureListener { exception ->
+        //         Log.e("FirestoreError", "Error fetching posts: ${exception.message}")
+        //     }
+
+        //new post fetch using PostManager
+        postManager.getPosts(forecast.location.name, forecast.location.country_code,
+            onSuccess = { posts ->
                 postList.clear()
-                for (document in documents) {
-                    if (document.getString("city") == forecast.location.name &&
-                        document.getString("countryCode") == forecast.location.country_code
-                    ) {
-                        val post = document.toObject(Post::class.java)
-                        postList.add(post)
-                    }
-                }
+                postList.addAll(posts)
                 viewBinding.fragmentHomeRvPosts.adapter?.notifyDataSetChanged()
+            },
+            onFailure = { errorMessage ->
+                Log.e("FirestoreError", errorMessage)
             }
-            .addOnFailureListener { exception ->
-                Log.e("FirestoreError", "Error fetching posts: ${exception.message}")
-            }
+        )
     }
 
 
